@@ -93,10 +93,12 @@ class TemplateTest < Minitest::Test
 
   def test_lambda_is_called_once_from_custom_assigns_over_multiple_parses_and_renders
     t = Template.new
-    assigns = { 'number' => -> {
-                              @global ||= 0
-                              @global  += 1
-                            } }
+    assigns = {
+      'number' => -> {
+        @global ||= 0
+        @global += 1
+      },
+    }
     assert_equal('1', t.parse("{{number}}").render!(assigns))
     assert_equal('1', t.parse("{{number}}").render!(assigns))
     assert_equal('1', t.render!(assigns))
@@ -315,13 +317,11 @@ class TemplateTest < Minitest::Test
   end
 
   def test_using_range_literal_works_as_expected
-    t = Template.parse("{% assign foo = (x..y) %}{{ foo }}")
-    result = t.render('x' => 1, 'y' => 5)
-    assert_equal('1..5', result)
+    source = "{% assign foo = (x..y) %}{{ foo }}"
+    assert_template_result("1..5", source, { "x" => 1, "y" => 5 })
 
-    t = Template.parse("{% assign nums = (x..y) %}{% for num in nums %}{{ num }}{% endfor %}")
-    result = t.render('x' => 1, 'y' => 5)
-    assert_equal('12345', result)
+    source = "{% assign nums = (x..y) %}{% for num in nums %}{{ num }}{% endfor %}"
+    assert_template_result("12345", source, { "x" => 1, "y" => 5 })
   end
 
   def test_source_string_subclass

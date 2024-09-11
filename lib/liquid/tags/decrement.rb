@@ -12,22 +12,25 @@ module Liquid
   #   or [section](/themes/architecture/sections) file that they're created in. However, the variable is shared across
   #   [snippets](/themes/architecture#snippets) included in the file.
   #
-  #   Similarly, variables that are created with `decrement` are independent from those created with [`assign`](/api/liquid/tags#assign)
-  #   and [`capture`](/api/liquid/tags#capture). However, `decrement` and [`increment`](/api/liquid/tags#increment) share
+  #   Similarly, variables that are created with `decrement` are independent from those created with [`assign`](/docs/api/liquid/tags/assign)
+  #   and [`capture`](/docs/api/liquid/tags/capture). However, `decrement` and [`increment`](/docs/api/liquid/tags/increment) share
   #   variables.
   # @liquid_syntax
   #   {% decrement variable_name %}
   # @liquid_syntax_keyword variable_name The name of the variable being decremented.
   class Decrement < Tag
+    attr_reader :variable_name
+
     def initialize(tag_name, markup, options)
       super
-      @variable = markup.strip
+      @variable_name = markup.strip
     end
 
     def render_to_output_buffer(context, output)
-      value = context.environments.first[@variable] ||= 0
+      counter_environment = context.environments.first
+      value = counter_environment[@variable_name] || 0
       value -= 1
-      context.environments.first[@variable] = value
+      counter_environment[@variable_name] = value
       output << value.to_s
       output
     end

@@ -6,13 +6,13 @@ class LiquidTagTest < Minitest::Test
   include Liquid
 
   def test_liquid_tag
-    assert_template_result('1 2 3', <<~LIQUID, 'array' => [1, 2, 3])
+    assert_template_result('1 2 3', <<~LIQUID, { 'array' => [1, 2, 3] })
       {%- liquid
         echo array | join: " "
       -%}
     LIQUID
 
-    assert_template_result('1 2 3', <<~LIQUID, 'array' => [1, 2, 3])
+    assert_template_result('1 2 3', <<~LIQUID, { 'array' => [1, 2, 3] })
       {%- liquid
         for value in array
           echo value
@@ -23,7 +23,7 @@ class LiquidTagTest < Minitest::Test
       -%}
     LIQUID
 
-    assert_template_result('4 8 12 6', <<~LIQUID, 'array' => [1, 2, 3])
+    assert_template_result('4 8 12 6', <<~LIQUID, { 'array' => [1, 2, 3] })
       {%- liquid
         for value in array
           assign double_value = value | times: 2
@@ -111,6 +111,39 @@ class LiquidTagTest < Minitest::Test
   def test_liquid_tag_in_raw
     assert_template_result("{% liquid echo 'test' %}\n", <<~LIQUID)
       {% raw %}{% liquid echo 'test' %}{% endraw %}
+    LIQUID
+  end
+
+  def test_nested_liquid_tags
+    assert_template_result('good', <<~LIQUID)
+      {%- liquid
+        liquid
+          if true
+            echo "good"
+          endif
+      -%}
+    LIQUID
+  end
+
+  def test_nested_liquid_tags_on_same_line
+    assert_template_result('good', <<~LIQUID)
+      {%- liquid liquid liquid echo "good" -%}
+    LIQUID
+  end
+
+  def test_nested_liquid_liquid_is_not_skipped_if_used_in_non_tag_position
+    assert_template_result('liquid', <<~LIQUID, { 'liquid' => 'liquid' })
+      {%- liquid liquid liquid echo liquid -%}
+    LIQUID
+  end
+
+  def test_next_liquid_with_unclosed_if_tag
+    assert_match_syntax_error("Liquid syntax error (line 2): 'if' tag was never closed", <<~LIQUID)
+      {%- liquid
+        liquid if true
+          echo "good"
+        endif
+      -%}
     LIQUID
   end
 end
